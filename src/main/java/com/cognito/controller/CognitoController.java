@@ -23,11 +23,9 @@ public class CognitoController {
     private static final Logger LOGGER = LoggerFactory.getLogger(
                     CognitoController.class);
 
-    @Autowired
-    private CognitoService cognitoService;
+    @Autowired private CognitoService cognitoService;
 
-    @PostMapping(value = "/signup")
-    public ResponseEntity<SignUpResult> signUp(
+    @PostMapping(value = "/signup") public ResponseEntity<SignUpResult> signUp(
                     @RequestBody SignUpDto signUpDto) {
         try {
             SignUpResult result = cognitoService.signUp(signUpDto.getName(),
@@ -41,8 +39,7 @@ public class CognitoController {
                         HttpStatus.BAD_REQUEST);
     }
 
-    @PostMapping(value = "/confirmEmail")
-    public ResponseEntity<String> confirmSignIn(
+    @PostMapping(value = "/confirmEmail") public ResponseEntity<String> confirmSignIn(
                     @RequestBody CodeConfirmDto codeConfirmDto) {
         try {
             cognitoService.confirmSignUp(codeConfirmDto.getEmail(),
@@ -56,32 +53,32 @@ public class CognitoController {
                         HttpStatus.BAD_REQUEST);
     }
 
-    @PostMapping(value = "/authenticate")
-    public ResponseEntity<LoginResponseDto> login(
+    @PostMapping(value = "/authenticate") public C2CResponseDto login(
                     @RequestBody LoginRequestDto loginRequest) {
         try {
             LoginResponseDto loginResponse = cognitoService.login(
                             loginRequest.getUsername(), loginRequest.getPassword());
-            return new ResponseEntity<>(loginResponse, HttpStatus.ACCEPTED);
+            return new C2CResponseDto("1200", "Successfully Logged In",
+                            loginResponse);
         } catch (C2CCognitoServiceException exception) {
             LOGGER.error(CognitoConstant.INVALID_CREDENTIALS, exception);
         }
-        return new ResponseEntity("Username/Password is not Valid",
-                        HttpStatus.UNAUTHORIZED);
+        return new C2CResponseDto("4001", "Not Logged In", null);
+
     }
 
-    @PostMapping(value = "/refresh")
-    public ResponseEntity<LoginResponseDto> refresh(
+    @PostMapping(value = "/refresh") public C2CResponseDto refresh(
                     @RequestBody RefreshRequestDto refreshRequestDto) {
         try {
             LoginResponseDto loginResponse = cognitoService.getRefreshAccess(
                             refreshRequestDto);
-            return new ResponseEntity<>(loginResponse, HttpStatus.ACCEPTED);
+            return new C2CResponseDto("1200", "Successfully Logged In",
+                            loginResponse);
         } catch (C2CCognitoServiceException exception) {
             LOGGER.error(CognitoConstant.INVALID_CREDENTIALS, exception);
         }
-        return new ResponseEntity("Username/Password is not Valid",
-                        HttpStatus.UNAUTHORIZED);
+        return new C2CResponseDto("4001", "Not Logged In", null);
+
     }
 
 }
