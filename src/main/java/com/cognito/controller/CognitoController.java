@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestControllerAdvice
 @RestController
+@CrossOrigin("*")
 public class CognitoController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(
