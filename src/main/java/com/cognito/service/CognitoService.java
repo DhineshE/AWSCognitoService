@@ -4,6 +4,7 @@ import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
 import com.amazonaws.services.cognitoidp.model.*;
 import com.cognito.constant.CognitoConstant;
 import com.cognito.dto.LoginResponseDto;
+import com.cognito.dto.RefreshRequestDto;
 import com.cognito.exception.C2CCognitoServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,7 +70,7 @@ import java.util.Map;
             put("USERNAME", email);
             put("PASSWORD", password);
         }};
-
+        System.out.println(email+ password);
         LoginResponseDto loginResponse = new LoginResponseDto();
         try {
             AdminInitiateAuthRequest authRequest = new AdminInitiateAuthRequest().withAuthFlow(
@@ -79,12 +80,13 @@ import java.util.Map;
 
             AdminInitiateAuthResult authResult = cognitoClient.adminInitiateAuth(
                             authRequest);
+
             AuthenticationResultType resultType = authResult.getAuthenticationResult();
             System.out.println(resultType.getAccessToken());
             loginResponse.setIdToken(resultType.getIdToken());
             loginResponse.setAccessToken(resultType.getAccessToken());
             loginResponse.setRefreshToken(resultType.getRefreshToken());
-            loginResponse.setMessage("Successfully login");
+            loginResponse.setExpiresIn(resultType.getExpiresIn());
 
         } catch (NotAuthorizedException notAuthorizedException) {
             throw new C2CCognitoServiceException(
@@ -105,5 +107,34 @@ import java.util.Map;
             awsCognitoIdentityProviderException.printStackTrace();
         }
         return "";
+    }
+
+    public LoginResponseDto getRefreshAccess(RefreshRequestDto refreshRequestDto)
+                    throws C2CCognitoServiceException {
+        LoginResponseDto loginResponse = new LoginResponseDto();
+        Map<String, String> authParams = new LinkedHashMap<String, String>() {{
+            put("REFRESH_TOKEN", refreshRequestDto.getRefreshToken());
+        }};
+        try{
+
+        var authRequest = new AdminInitiateAuthRequest()
+                        .withAuthFlow(AuthFlowType.REFRESH_TOKEN_AUTH)
+                        .withUserPoolId(userPoolId)
+                        .withClientId(clientId)
+                        .withAuthParameters(authParams);
+        AdminInitiateAuthResult authResult = cognitoClient.adminInitiateAuth(
+                        authRequest);
+        System.out.println(authResult.toString());
+        AuthenticationResultType resultType = authResult.getAuthenticationResult();
+        System.out.println(resultType);
+        loginResponse.setIdToken(resultType.getIdToken());
+        loginResponse.setAccessToken(resultType.getAccessToken());
+        loginResponse.setExpiresIn(resultType.getExpiresIn());
+    } catch (NotAuthorizedException notAuthorizedException) {
+        throw new C2CCognitoServiceException(
+                        CognitoConstant.PASSWORD_NOT_VALID,
+                        notAuthorizedException.getMessage(), null);
+    }
+        return loginResponse;
     }
 }

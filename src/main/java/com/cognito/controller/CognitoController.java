@@ -2,10 +2,7 @@ package com.cognito.controller;
 
 import com.amazonaws.services.cognitoidp.model.SignUpResult;
 import com.cognito.constant.CognitoConstant;
-import com.cognito.dto.CodeConfirmDto;
-import com.cognito.dto.LoginRequestDto;
-import com.cognito.dto.LoginResponseDto;
-import com.cognito.dto.SignUpDto;
+import com.cognito.dto.*;
 import com.cognito.exception.C2CCognitoServiceException;
 import com.cognito.service.CognitoService;
 import org.slf4j.Logger;
@@ -21,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestControllerAdvice
 @RestController
-@RequestMapping(value = "/cognito")
 public class CognitoController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(
@@ -60,12 +56,26 @@ public class CognitoController {
                         HttpStatus.BAD_REQUEST);
     }
 
-    @PostMapping(value = "/login")
+    @PostMapping(value = "/authenticate")
     public ResponseEntity<LoginResponseDto> login(
                     @RequestBody LoginRequestDto loginRequest) {
         try {
             LoginResponseDto loginResponse = cognitoService.login(
                             loginRequest.getUsername(), loginRequest.getPassword());
+            return new ResponseEntity<>(loginResponse, HttpStatus.ACCEPTED);
+        } catch (C2CCognitoServiceException exception) {
+            LOGGER.error(CognitoConstant.INVALID_CREDENTIALS, exception);
+        }
+        return new ResponseEntity("Username/Password is not Valid",
+                        HttpStatus.UNAUTHORIZED);
+    }
+
+    @PostMapping(value = "/refresh")
+    public ResponseEntity<LoginResponseDto> refresh(
+                    @RequestBody RefreshRequestDto refreshRequestDto) {
+        try {
+            LoginResponseDto loginResponse = cognitoService.getRefreshAccess(
+                            refreshRequestDto);
             return new ResponseEntity<>(loginResponse, HttpStatus.ACCEPTED);
         } catch (C2CCognitoServiceException exception) {
             LOGGER.error(CognitoConstant.INVALID_CREDENTIALS, exception);

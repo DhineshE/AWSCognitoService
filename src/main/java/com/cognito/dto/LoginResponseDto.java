@@ -16,6 +16,6 @@ public class LoginResponseDto {
     private String idToken;
     private String accessToken;
     private String refreshToken;
-    private String message;
+    private int expiresIn;
 
 }
